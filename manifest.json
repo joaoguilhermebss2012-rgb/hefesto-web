@@ -1,0 +1,15 @@
+{
+  "name": "Hefesto",
+  "short_name": "Hefesto",
+  "description": "Assistente do Segundo Cérebro do João Guilherme Barbosa",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0a0a0c",
+  "theme_color": "#0a0a0c",
+  "icons": [
+    { "src": "assets/logo.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/logo.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
