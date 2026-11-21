@@ -97,6 +97,21 @@
   .ab { background: rgba(200,30,44,.15); border: 1px solid rgba(200,30,44,.4); border-radius: 18px;
     padding: 10px 16px; color: var(--vc); font-size: 13px; cursor: pointer; font-weight: 600; white-space: nowrap; }
 
+  /* ===== TAREFAS / ROTINAS / GRAFO ===== */
+  .sec { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--cz); padding: 10px 14px 4px; border-top: 1px solid rgba(255,255,255,.05); }
+  .ic-btn { background: none; border: none; color: var(--cz); font-size: 16px; padding: 4px 8px; cursor: pointer; flex-shrink: 0; }
+  .ic-btn:hover { color: var(--vc); }
+  .td { font-size: 11px; color: var(--cz); margin-top: 3px; }
+  .dias { display: flex; gap: 4px; }
+  .dias span { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--cz); border: 1px solid rgba(255,255,255,.12); cursor: pointer; user-select: none; }
+  .dias span.on { background: var(--v); border-color: var(--v); color: #fff; }
+  .mini { padding: 5px 10px; font-size: 11px; }
+  #grafo-wrap { flex: 1; position: relative; min-height: 200px; overflow: hidden; }
+  #grafo-canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+  #btn-mic, #btn-voz { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1); }
+  #btn-mic.ativo { background: rgba(200,30,44,.3); border-color: var(--v); }
+  .btn-ico { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; color: var(--czc); }
+
   /* ===== BUSCA ===== */
   .br-item { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07); border-radius: 10px; padding: 12px 14px; margin: 0 14px 8px; }
   .br-titulo { color: var(--vc); font-weight: 600; font-size: 14px; }
@@ -131,6 +146,7 @@
         <div class="hn">HEFESTO</div>
         <div class="hs" id="hs">conectando...</div>
       </div>
+      <button id="sair" onclick="pedirAvisos()" title="Ativar avisos" style="margin-right:6px">Avisos</button>
       <button id="sair" onclick="sair()">Sair</button>
     </div>
 
@@ -138,6 +154,7 @@
       <div class="tab on" onclick="tab('chat',this)" title="Chat"><svg class="ic" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
       <div class="tab" onclick="tab('tar',this)" title="Tarefas"><svg class="ic" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div>
       <div class="tab" onclick="tab('nota',this)" title="Notas"><svg class="ic" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg></div>
+      <div class="tab" onclick="tab('grafo',this)" title="Grafo do vault"><svg class="ic" viewBox="0 0 24 24"><circle cx="5" cy="6" r="2.5"/><circle cx="19" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M7.2 7l3.5 9M16.8 7l-3.5 9M7.5 6h9"/></svg></div>
       <div class="tab" onclick="tab('busca',this)" title="Buscar"><svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></div>
     </div>
 
@@ -147,7 +164,9 @@
         <div class="m ia"><div class="av"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div><div class="mb">Olá. Sou o <strong>Hefesto</strong>. Suas mensagens aqui são respondidas pelo seu PC (precisa estar ligado e com o Hefesto rodando).</div></div>
       </div>
       <div id="inp-area">
+        <button class="btn-ico" id="btn-mic" onclick="toggleMic()" title="Falar"><svg class="ic" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0014 0M12 19v3"/></svg></button>
         <input id="inp" placeholder="Fale com o Hefesto...">
+        <button class="btn-ico" id="btn-voz" onclick="toggleVoz()" title="Ler respostas em voz alta"><svg class="ic" viewBox="0 0 24 24" id="icone-voz"><path d="M11 5L6 9H2v6h4l5 4V5z"/></svg></button>
         <button class="bs" onclick="enviar()"><svg class="ic" viewBox="0 0 24 24"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg></button>
       </div>
     </div>
@@ -155,9 +174,25 @@
     <!-- TAREFAS -->
     <div class="pnl" id="tab-tar">
       <div class="lst" id="lst-tar"></div>
-      <div class="ar">
-        <input class="ai" id="ni-tar" placeholder="Nova tarefa...">
+      <div class="ar" style="flex-wrap:wrap">
+        <input class="ai" id="ni-tar" placeholder="Nova tarefa..." style="flex:1 1 140px">
+        <input class="ai" id="ni-tar-quando" type="datetime-local" title="Horário do aviso" style="flex:0 0 auto;color-scheme:dark">
         <button class="ab" onclick="addTar()">Add</button>
+      </div>
+      <div class="sec">Rotinas</div>
+      <div class="lst" id="lst-rot" style="max-height:170px"></div>
+      <div class="ar" style="flex-wrap:wrap">
+        <select class="ai" id="rot-tipo" onchange="ajustarRot()" style="flex:0 0 auto"><option value="diaria">Diária</option><option value="semanal">Semanal</option><option value="ferias">Férias</option></select>
+        <input class="ai" id="rot-nome" placeholder="Nome (ex: Academia)" style="flex:1 1 120px">
+        <input class="ai" id="rot-hora" type="time" value="08:00" style="flex:0 0 auto;color-scheme:dark">
+      </div>
+      <div class="ar" style="flex-wrap:wrap;align-items:center">
+        <div class="dias" id="rot-dias" style="display:none">
+          <span data-d="0">D</span><span data-d="1">S</span><span data-d="2">T</span><span data-d="3">Q</span><span data-d="4">Q</span><span data-d="5">S</span><span data-d="6">S</span>
+        </div>
+        <input class="ai" id="rot-ini" type="date" style="display:none;flex:1 1 120px;color-scheme:dark">
+        <input class="ai" id="rot-fim" type="date" style="display:none;flex:1 1 120px;color-scheme:dark">
+        <button class="ab" onclick="addRot()" style="margin-left:auto">Add rotina</button>
       </div>
     </div>
 
@@ -168,6 +203,16 @@
         <input class="ai" id="ni-nota" placeholder="Nova nota...">
         <button class="ab" onclick="addNota()">Add</button>
       </div>
+    </div>
+
+    <!-- GRAFO -->
+    <div class="pnl" id="tab-grafo">
+      <div class="ar">
+        <input class="ai" id="grafo-busca" placeholder="Filtrar notas...">
+        <label class="sec" style="border:none;padding:0;display:flex;align-items:center;gap:4px"><input type="checkbox" id="grafo-orfaos" checked> Órfãos</label>
+      </div>
+      <div id="grafo-wrap"><canvas id="grafo-canvas"></canvas><div id="grafo-info" style="position:absolute;left:10px;bottom:8px;font-size:11px;color:var(--cz)"></div></div>
+      <div id="grafo-nota" class="ni" style="display:none;max-height:35%;overflow:auto;border-radius:0;border-left:none;border-right:none"></div>
     </div>
 
     <!-- BUSCA -->
@@ -191,7 +236,9 @@
     tarefas: 'hefesto_tarefas',
     notas: 'hefesto_notas',
     mensagens: 'hefesto_mensagens_pendentes',
-    vault: 'hefesto_vault_notas'
+    vault: 'hefesto_vault_notas',
+    rotinas: 'hefesto_rotinas',
+    captura: 'hefesto_captura'
   }
 
   let OWNER = null
@@ -234,6 +281,7 @@
     document.getElementById('tab-' + nome).classList.add('on')
     if (nome === 'tar') carregarTarefas()
     if (nome === 'nota') carregarNotas()
+    if (nome === 'grafo') carregarGrafo()
   }
 
   function carregarTudo() { carregarTarefas(); carregarNotas(); carregarHistorico() }
@@ -271,6 +319,7 @@
         clearInterval(intervalo)
         esperaEl.remove()
         addMsg(data.resposta, 'ia')
+        falar(data.resposta)
       }
       if (tentativas > 40) {
         clearInterval(intervalo)
@@ -295,30 +344,103 @@
 
   const ICONE_CHECK = '<svg class="ic" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>'
 
+  const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+  const fmtQ = iso => iso ? new Date(iso).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : ''
+  const isoLocal = iso => { const d = new Date(iso); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0,16) }
+  const DIAS_NOME = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb']
+  let tarEdit = null
+
   async function carregarTarefas() {
     const { data } = await sb.from(T.tarefas).select('*').order('criada', { ascending: false })
     const lst = document.getElementById('lst-tar')
-    if (!data || !data.length) { lst.innerHTML = '<div class="vz">Nenhuma tarefa ainda</div>'; return }
-    lst.innerHTML = ''
-    data.forEach(t => {
-      const div = document.createElement('div')
-      div.className = `ti${t.concluida ? ' done' : ''}`
-      div.innerHTML = `<div class="ck">${t.concluida ? ICONE_CHECK : ''}</div><div class="tt">${t.texto}</div>`
-      if (!t.concluida) div.onclick = async () => {
-        await sb.from(T.tarefas).update({ concluida: true, concluida_em: new Date().toISOString() }).eq('id', t.id)
-        carregarTarefas()
-      }
-      lst.appendChild(div)
-    })
+    if (!data || !data.length) { lst.innerHTML = '<div class="vz">Nenhuma tarefa ainda</div>' } else {
+      lst.innerHTML = ''
+      data.forEach(t => {
+        const div = document.createElement('div')
+        div.className = `ti${t.concluida ? ' done' : ''}`
+        if (tarEdit === t.id) {
+          div.innerHTML = `<div style="flex:1;display:flex;flex-direction:column;gap:6px">
+            <input class="ai" id="ed-txt" value="${esc(t.texto)}">
+            <input class="ai" id="ed-q" type="datetime-local" value="${t.quando ? isoLocal(t.quando) : ''}" style="color-scheme:dark">
+            <div style="display:flex;gap:6px"><button class="ab" id="ed-ok">Salvar</button><button class="ab" id="ed-no">Cancelar</button></div></div>`
+          div.querySelector('#ed-ok').onclick = async () => {
+            const txt = document.getElementById('ed-txt').value.trim()
+            const q = document.getElementById('ed-q').value
+            if (!txt) return
+            await sb.from(T.tarefas).update({ texto: txt, quando: q ? new Date(q).toISOString() : null, notificada: false }).eq('id', t.id)
+            tarEdit = null; carregarTarefas()
+          }
+          div.querySelector('#ed-no').onclick = () => { tarEdit = null; carregarTarefas() }
+        } else {
+          div.innerHTML = `<div class="ck">${t.concluida ? ICONE_CHECK : ''}</div>
+            <div style="flex:1;min-width:0"><div class="tt">${esc(t.texto)}</div><div class="td">${t.quando ? '⏰ ' + fmtQ(t.quando) : ''}</div></div>
+            ${t.concluida ? '' : '<button class="ic-btn" data-a="ed" title="Editar">✎</button>'}
+            <button class="ic-btn" data-a="del" title="Excluir">×</button>`
+          if (!t.concluida) div.querySelector('.tt').onclick = async () => {
+            await sb.from(T.tarefas).update({ concluida: true, concluida_em: new Date().toISOString() }).eq('id', t.id)
+            carregarTarefas()
+          }
+          const ed = div.querySelector('[data-a=ed]')
+          if (ed) ed.onclick = () => { tarEdit = t.id; carregarTarefas() }
+          div.querySelector('[data-a=del]').onclick = async () => { await sb.from(T.tarefas).delete().eq('id', t.id); carregarTarefas() }
+        }
+        lst.appendChild(div)
+      })
+    }
+    carregarRotinas()
   }
 
   async function addTar() {
     const inp = document.getElementById('ni-tar')
+    const q = document.getElementById('ni-tar-quando')
     const txt = inp.value.trim(); if (!txt) return
-    await sb.from(T.tarefas).insert({ texto: txt, owner: OWNER })
-    inp.value = ''; carregarTarefas()
+    await sb.from(T.tarefas).insert({ texto: txt, quando: q.value ? new Date(q.value).toISOString() : null, origem: 'web', owner: OWNER })
+    inp.value = ''; q.value = ''; carregarTarefas()
   }
   document.getElementById('ni-tar').addEventListener('keydown', e => { if (e.key === 'Enter') addTar() })
+
+  function ajustarRot() {
+    const tipo = document.getElementById('rot-tipo').value
+    document.getElementById('rot-dias').style.display = tipo === 'semanal' ? 'flex' : 'none'
+    document.getElementById('rot-ini').style.display = tipo === 'ferias' ? 'block' : 'none'
+    document.getElementById('rot-fim').style.display = tipo === 'ferias' ? 'block' : 'none'
+  }
+  document.querySelectorAll('#rot-dias span').forEach(s => s.addEventListener('click', () => s.classList.toggle('on')))
+
+  async function carregarRotinas() {
+    const { data } = await sb.from(T.rotinas).select('*').order('criada', { ascending: true })
+    const lst = document.getElementById('lst-rot')
+    if (!data || !data.length) { lst.innerHTML = '<div class="vz" style="padding:10px">Nenhuma rotina ainda</div>'; return }
+    lst.innerHTML = ''
+    data.forEach(r => {
+      const info = r.tipo === 'diaria' ? 'Todo dia' : r.tipo === 'semanal' ? (r.dias || []).map(i => DIAS_NOME[i]).join(', ') : `Férias: ${r.inicio} a ${r.fim}`
+      const div = document.createElement('div'); div.className = 'ti'
+      div.innerHTML = `<div style="flex:1;min-width:0"><div class="tt">${esc(r.nome)} · ${esc(r.hora)}</div><div class="td">${info}</div></div><button class="ic-btn">×</button>`
+      div.querySelector('button').onclick = async () => { await sb.from(T.rotinas).delete().eq('id', r.id); carregarRotinas() }
+      lst.appendChild(div)
+    })
+  }
+
+  async function addRot() {
+    const tipo = document.getElementById('rot-tipo').value
+    const nome = document.getElementById('rot-nome').value.trim()
+    const hora = document.getElementById('rot-hora').value
+    if (!nome || !hora) return
+    const r = { nome, tipo, hora, origem: 'web', owner: OWNER }
+    if (tipo === 'semanal') {
+      r.dias = [...document.querySelectorAll('#rot-dias span.on')].map(s => Number(s.dataset.d))
+      if (!r.dias.length) return
+    }
+    if (tipo === 'ferias') {
+      r.inicio = document.getElementById('rot-ini').value
+      r.fim = document.getElementById('rot-fim').value
+      if (!r.inicio || !r.fim) return
+    }
+    await sb.from(T.rotinas).insert(r)
+    document.getElementById('rot-nome').value = ''
+    document.querySelectorAll('#rot-dias span').forEach(s => s.classList.remove('on'))
+    carregarRotinas()
+  }
 
   async function carregarNotas() {
     const { data } = await sb.from(T.notas).select('*').order('criada', { ascending: false }).limit(30)
@@ -327,7 +449,11 @@
     lst.innerHTML = ''
     data.forEach(n => {
       const div = document.createElement('div'); div.className = 'ni'
-      div.textContent = n.texto
+      div.innerHTML = `${esc(n.texto)}<div style="margin-top:8px"><button class="ab mini">Salvar no cérebro</button></div>`
+      div.querySelector('button').onclick = async (e) => {
+        await sb.from(T.captura).insert({ titulo: 'Nota do celular', url: 'app-web', selecao: n.texto, owner: OWNER })
+        e.target.textContent = 'Enviado ✓'
+      }
       lst.appendChild(div)
     })
   }
@@ -339,6 +465,216 @@
     inp.value = ''; carregarNotas()
   }
   document.getElementById('ni-nota').addEventListener('keydown', e => { if (e.key === 'Enter') addNota() })
+
+  // ===== AVISOS (enquanto o app estiver aberto) =====
+  function avisar(titulo, corpo) {
+    if ('Notification' in window && Notification.permission === 'granted') new Notification(titulo, { body: corpo })
+    addMsg(`${titulo}: ${corpo}`, 'ia')
+  }
+  const rotinasAvisadas = new Set()
+  async function checarAvisos() {
+    if (!OWNER) return
+    const { data: tarefas } = await sb.from(T.tarefas).select('id,texto').eq('concluida', false).eq('notificada', false).lte('quando', new Date().toISOString())
+    for (const t of tarefas || []) {
+      avisar('Hefesto · Tarefa', t.texto)
+      await sb.from(T.tarefas).update({ notificada: true }).eq('id', t.id)
+    }
+    const agora = new Date()
+    const hhmm = String(agora.getHours()).padStart(2,'0') + ':' + String(agora.getMinutes()).padStart(2,'0')
+    const hoje = agora.toLocaleDateString('sv-SE')
+    const { data: rotinas } = await sb.from(T.rotinas).select('*').eq('hora', hhmm)
+    for (const r of rotinas || []) {
+      const vale = r.tipo === 'diaria' || (r.tipo === 'semanal' && (r.dias || []).includes(agora.getDay())) || (r.tipo === 'ferias' && hoje >= r.inicio && hoje <= r.fim)
+      const chave = r.id + hoje
+      if (vale && !rotinasAvisadas.has(chave)) { rotinasAvisadas.add(chave); avisar('Hefesto · ' + r.nome, r.nome) }
+    }
+  }
+  setInterval(() => checarAvisos().catch(() => {}), 30000)
+
+  // ===== VOZ (reconhecimento e leitura nativos do navegador) =====
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition
+  let vozResposta = false, reconhecimento = null
+  function toggleVoz() {
+    vozResposta = !vozResposta
+    document.getElementById('icone-voz').style.stroke = vozResposta ? 'var(--vc)' : 'var(--cz)'
+    if (!vozResposta && window.speechSynthesis) window.speechSynthesis.cancel()
+  }
+  function falar(texto) {
+    if (!vozResposta || !window.speechSynthesis) return
+    const u = new SpeechSynthesisUtterance(texto.replace(/[*_`#]/g, ''))
+    u.lang = 'pt-BR'
+    window.speechSynthesis.speak(u)
+  }
+  async function pedirAvisos() {
+    if (!('Notification' in window)) { addMsg('Este navegador não suporta notificações. No iPhone, instale o app na Tela de Início (iOS 16.4 ou mais novo).', 'ia'); return }
+    const r = await Notification.requestPermission()
+    addMsg(r === 'granted' ? 'Avisos ativados.' : 'Avisos não permitidos. Você ainda verá os avisos dentro do app.', 'ia')
+  }
+
+  function toggleMic() {
+    if (!SpeechRec) { addMsg('Reconhecimento de voz não disponível neste navegador. Use o microfone do teclado do celular.', 'ia'); return }
+    if (reconhecimento) { reconhecimento.stop(); return }
+    reconhecimento = new SpeechRec()
+    reconhecimento.lang = 'pt-BR'
+    reconhecimento.interimResults = false
+    reconhecimento.onstart = () => document.getElementById('btn-mic').classList.add('ativo')
+    reconhecimento.onresult = e => { document.getElementById('inp').value = e.results[0][0].transcript; enviar() }
+    reconhecimento.onerror = () => {}
+    reconhecimento.onend = () => { document.getElementById('btn-mic').classList.remove('ativo'); reconhecimento = null }
+    reconhecimento.start()
+  }
+
+  // ===== GRAFO DO VAULT (espelho no Supabase) =====
+  let gNos = [], gArestas = [], gCtx = null, gAnim = null, gAlpha = 1
+  let gPanX = 0, gPanY = 0, gZoom = 1, gFoco = null, gArr = null, gPan = null, gDown = null, gMoveu = false
+
+  const COR_PASTA = { concepts: '#4a90d9', entities: '#e8384a', projects: '#d9a63f', references: '#9966cc', journal: '#6fcf6f', synthesis: '#e8384a', _meta: '#9966cc' }
+
+  async function carregarGrafo() {
+    const { data } = await sb.from(T.vault).select('caminho,titulo,conteudo')
+    const canvas = document.getElementById('grafo-canvas'), wrap = document.getElementById('grafo-wrap')
+    canvas.width = wrap.clientWidth; canvas.height = wrap.clientHeight
+    gCtx = canvas.getContext('2d')
+    const porNome = new Map()
+    gNos = (data || []).map((n, i) => {
+      const base = n.caminho.split('/').pop().toLowerCase()
+      porNome.set(base, i)
+      if (n.titulo) porNome.set(n.titulo.toLowerCase(), i)
+      return { id: n.caminho, titulo: n.titulo || base, conteudo: n.conteudo || '', grau: 0,
+        cor: COR_PASTA[n.caminho.split('/')[0]] || '#8a8a92',
+        x: canvas.width / 2 + (Math.random() - 0.5) * 300, y: canvas.height / 2 + (Math.random() - 0.5) * 300, vx: 0, vy: 0 }
+    })
+    gArestas = []
+    gNos.forEach((n, i) => {
+      for (const m of n.conteudo.matchAll(/\[\[([^\]|#]+)/g)) {
+        const alvo = porNome.get(m[1].trim().split('/').pop().toLowerCase())
+        if (alvo !== undefined && alvo !== i) gArestas.push({ de: i, para: alvo })
+      }
+    })
+    gArestas.forEach(a => { gNos[a.de].grau++; gNos[a.para].grau++ })
+    gNos.forEach(n => { n.raio = 3 + Math.sqrt(n.grau) * 1.8 })
+    gAlpha = 1
+    document.getElementById('grafo-info').textContent = `${gNos.length} notas · ${gArestas.length} links`
+    if (!gAnim) gAnim = requestAnimationFrame(loopGrafo)
+  }
+
+  const gVisivel = n => document.getElementById('grafo-orfaos').checked || n.grau > 0
+
+  function gFisica() {
+    const w = gCtx.canvas.width, h = gCtx.canvas.height
+    const vis = gNos.filter(gVisivel), k = gAlpha
+    for (let i = 0; i < vis.length; i++) for (let j = i + 1; j < vis.length; j++) {
+      const a = vis[i], b = vis[j]
+      const dx = a.x - b.x, dy = a.y - b.y, d2 = Math.max(dx * dx + dy * dy, 30), d = Math.sqrt(d2)
+      const f = (1400 / d2) * k
+      a.vx += (dx / d) * f; a.vy += (dy / d) * f; b.vx -= (dx / d) * f; b.vy -= (dy / d) * f
+    }
+    for (const ar of gArestas) {
+      const a = gNos[ar.de], b = gNos[ar.para]
+      if (!gVisivel(a) || !gVisivel(b)) continue
+      const dx = b.x - a.x, dy = b.y - a.y, d = Math.sqrt(dx * dx + dy * dy) || 1
+      const f = (d - 120) * 0.03 * k
+      a.vx += (dx / d) * f; a.vy += (dy / d) * f; b.vx -= (dx / d) * f; b.vy -= (dy / d) * f
+    }
+    for (const n of vis) {
+      n.vx += (w / 2 - n.x) * 0.002 * k; n.vy += (h / 2 - n.y) * 0.002 * k
+      n.vx *= 0.7; n.vy *= 0.7
+      if (n !== gArr) { n.x += n.vx; n.y += n.vy }
+    }
+    gAlpha = Math.max(0.02, gAlpha * 0.993)
+  }
+
+  function gDesenhar() {
+    const ctx = gCtx, w = ctx.canvas.width, h = ctx.canvas.height
+    const busca = document.getElementById('grafo-busca').value.trim().toLowerCase()
+    const vizinhos = new Set()
+    if (gFoco) for (const ar of gArestas) {
+      if (gNos[ar.de] === gFoco) vizinhos.add(gNos[ar.para])
+      if (gNos[ar.para] === gFoco) vizinhos.add(gNos[ar.de])
+    }
+    const alphaNo = n => gFoco ? ((n === gFoco || vizinhos.has(n)) ? 1 : 0.12) : ((!busca || n.titulo.toLowerCase().includes(busca)) ? 1 : 0.12)
+    ctx.save(); ctx.fillStyle = '#0a0a0c'; ctx.fillRect(0, 0, w, h)
+    ctx.translate(gPanX, gPanY); ctx.scale(gZoom, gZoom)
+    ctx.lineWidth = 1 / gZoom
+    for (const ar of gArestas) {
+      const a = gNos[ar.de], b = gNos[ar.para]
+      if (!gVisivel(a) || !gVisivel(b)) continue
+      const ligado = gFoco && (a === gFoco || b === gFoco)
+      const alpha = gFoco ? (ligado ? 0.8 : 0.04) : 0.22
+      const dx = b.x - a.x, dy = b.y - a.y, d = Math.sqrt(dx * dx + dy * dy) || 1
+      const ux = dx / d, uy = dy / d, fx = b.x - ux * (b.raio + 2), fy = b.y - uy * (b.raio + 2)
+      ctx.strokeStyle = `rgba(200,200,210,${alpha})`
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(fx, fy); ctx.stroke()
+      const s = 6 / gZoom
+      ctx.fillStyle = `rgba(200,200,210,${alpha})`
+      ctx.beginPath(); ctx.moveTo(fx, fy)
+      ctx.lineTo(fx - ux * s - uy * s * 0.5, fy - uy * s + ux * s * 0.5)
+      ctx.lineTo(fx - ux * s + uy * s * 0.5, fy - uy * s - ux * s * 0.5)
+      ctx.fill()
+    }
+    for (const n of gNos) {
+      if (!gVisivel(n)) continue
+      ctx.globalAlpha = alphaNo(n)
+      ctx.beginPath(); ctx.arc(n.x, n.y, n === gFoco ? n.raio + 2 : n.raio, 0, Math.PI * 2)
+      ctx.fillStyle = n.cor; ctx.shadowColor = n.cor; ctx.shadowBlur = n === gFoco ? 14 : 5
+      ctx.fill(); ctx.shadowBlur = 0
+      if (gZoom >= 0.8 || n.grau >= 3 || n === gFoco || vizinhos.has(n)) {
+        ctx.fillStyle = 'rgba(230,230,235,0.9)'; ctx.font = '11px "Segoe UI", sans-serif'; ctx.textAlign = 'center'
+        ctx.fillText(n.titulo, n.x, n.y + n.raio + 11)
+      }
+      ctx.globalAlpha = 1
+    }
+    ctx.restore()
+  }
+
+  function loopGrafo() {
+    if (!document.getElementById('tab-grafo').classList.contains('on')) { gAnim = null; return }
+    if (gAlpha > 0.021 || gArr) gFisica()
+    gDesenhar()
+    gAnim = requestAnimationFrame(loopGrafo)
+  }
+
+  const gCoord = (mx, my) => ({ x: (mx - gPanX) / gZoom, y: (my - gPanY) / gZoom })
+  function gNoEm(mx, my) {
+    const { x, y } = gCoord(mx, my)
+    let melhor = null, menor = Infinity
+    for (const n of gNos) {
+      if (!gVisivel(n)) continue
+      const d = Math.hypot(n.x - x, n.y - y)
+      if (d < n.raio + 8 / gZoom && d < menor) { menor = d; melhor = n }
+    }
+    return melhor
+  }
+
+  (function initGrafoEventos() {
+    const canvas = document.getElementById('grafo-canvas')
+    const pos = e => { const r = canvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top } }
+    canvas.addEventListener('pointerdown', e => {
+      const p = pos(e); gDown = p; gMoveu = false
+      const n = gNoEm(p.x, p.y)
+      if (n) gArr = n; else gPan = { x: p.x - gPanX, y: p.y - gPanY }
+      canvas.setPointerCapture(e.pointerId)
+    })
+    canvas.addEventListener('pointermove', e => {
+      const p = pos(e)
+      if (gDown && Math.hypot(p.x - gDown.x, p.y - gDown.y) > 6) gMoveu = true
+      if (gArr) { const c = gCoord(p.x, p.y); gArr.x = c.x; gArr.y = c.y; gArr.vx = 0; gArr.vy = 0; gAlpha = Math.max(gAlpha, 0.3) }
+      else if (gPan) { gPanX = p.x - gPan.x; gPanY = p.y - gPan.y }
+      gFoco = gArr || gNoEm(p.x, p.y)
+    })
+    canvas.addEventListener('pointerup', async () => {
+      if (gArr && !gMoveu) await abrirNota(gArr)
+      gArr = null; gPan = null; gDown = null
+    })
+    canvas.addEventListener('pointercancel', () => { gArr = null; gPan = null })
+    document.getElementById('grafo-orfaos').addEventListener('change', () => { gAlpha = 0.6 })
+  })()
+
+  async function abrirNota(n) {
+    const box = document.getElementById('grafo-nota')
+    box.style.display = 'block'
+    box.innerHTML = `<strong style="color:var(--vc)">${esc(n.titulo)}</strong><div style="margin-top:6px;white-space:pre-wrap;font-size:12px;color:var(--czc)">${esc(n.conteudo.slice(0, 2000))}</div>`
+  }
 
   async function buscar() {
     const q = document.getElementById('q-busca').value.trim(); if (!q) return
