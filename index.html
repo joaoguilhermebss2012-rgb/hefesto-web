@@ -287,11 +287,13 @@
   function carregarTudo() { carregarTarefas(); carregarNotas(); carregarHistorico() }
 
   async function carregarHistorico() {
-    const { data } = await sb.from('hefesto_chat_historico').select('role,content,ts').order('ts', { ascending: false }).limit(60)
+    const { data, error } = await sb.from('hefesto_chat_historico').select('role,content,ts').order('ts', { ascending: false }).limit(60)
+    if (error) { addMsg('Não consegui carregar o histórico: ' + error.message, 'ia'); return }
     if (!data || !data.length) return
     const c = document.getElementById('msgs')
     c.innerHTML = ''
     data.reverse().forEach(l => addMsg(l.content, l.role === 'user' ? 'u' : 'ia'))
+    c.scrollTop = c.scrollHeight
   }
 
   async function enviar() {
@@ -451,8 +453,9 @@
       const div = document.createElement('div'); div.className = 'ni'
       div.innerHTML = `${esc(n.texto)}<div style="margin-top:8px"><button class="ab mini">Salvar no cérebro</button></div>`
       div.querySelector('button').onclick = async (e) => {
-        await sb.from(T.captura).insert({ titulo: 'Nota do celular', url: 'app-web', selecao: n.texto, owner: OWNER })
-        e.target.textContent = 'Enviado ✓'
+        const { error } = await sb.from(T.captura).insert({ titulo: 'Nota do celular', url: 'app-web', selecao: n.texto, owner: OWNER })
+        if (error) { e.target.textContent = 'Erro'; addMsg('Não consegui enviar ao cérebro: ' + error.message, 'ia'); return }
+        e.target.textContent = 'Enviado ✓ (o PC grava no vault)'
       }
       lst.appendChild(div)
     })
