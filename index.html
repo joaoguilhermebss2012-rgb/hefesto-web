@@ -48,8 +48,12 @@
 
   /* ===== TABS ===== */
   #tabs { display: flex; background: rgba(0,0,0,.35); border-bottom: 1px solid rgba(255,255,255,.05); flex-shrink: 0; }
-  .tab { flex: 1; padding: 13px 4px; display: flex; align-items: center; justify-content: center;
+  .tab { flex: 1; padding: 9px 2px 7px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
     color: var(--cz); cursor: pointer; border-bottom: 2px solid transparent; transition: all .15s; }
+  .tab::after { content: attr(title); font-size: 10px; letter-spacing: .2px; white-space: nowrap; }
+  .tab-legenda { display: flex; gap: 10px; flex-wrap: wrap; padding: 6px 14px; font-size: 11px; color: var(--cz); }
+  .tab-legenda span { display: flex; align-items: center; gap: 4px; }
+  .tab-legenda i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
   .tab.on { color: var(--vc); border-bottom-color: var(--v); }
 
   .pnl { display: none; flex: 1; overflow: hidden; flex-direction: column; }
@@ -121,7 +125,7 @@
   <meta name="theme-color" content="#0a0a0c">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <link rel="apple-touch-icon" href="assets/logo.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/icon-180.png">
 </head>
 <body>
 
@@ -161,7 +165,7 @@
     <!-- CHAT -->
     <div class="pnl on" id="tab-chat">
       <div id="msgs">
-        <div class="m ia"><div class="av"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div><div class="mb">Olá. Sou o <strong>Hefesto</strong>. Suas mensagens aqui são respondidas pelo seu PC (precisa estar ligado e com o Hefesto rodando).</div></div>
+        <div class="m ia"><div class="av"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div><div class="mb">Olá. Sou o <strong>Hefesto</strong>. Suas mensagens são respondidas pelo seu PC (precisa estar ligado com o Hefesto aberto).<br><br>Use o microfone para falar, o alto-falante para ouvir as respostas, e a aba Grafo para ver o seu vault. Toque em <strong>Avisos</strong> no topo para receber alertas de tarefas e rotinas.</div></div>
       </div>
       <div id="inp-area">
         <button class="btn-ico" id="btn-mic" onclick="toggleMic()" title="Falar"><svg class="ic" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0014 0M12 19v3"/></svg></button>
@@ -212,6 +216,13 @@
         <label class="sec" style="border:none;padding:0;display:flex;align-items:center;gap:4px"><input type="checkbox" id="grafo-orfaos" checked> Órfãos</label>
       </div>
       <div id="grafo-wrap"><canvas id="grafo-canvas"></canvas><div id="grafo-info" style="position:absolute;left:10px;bottom:8px;font-size:11px;color:var(--cz)"></div></div>
+      <div class="tab-legenda">
+        <span><i style="background:#4a90d9"></i>conceitos</span>
+        <span><i style="background:#e8384a"></i>pessoas e síntese</span>
+        <span><i style="background:#d9a63f"></i>projetos</span>
+        <span><i style="background:#9966cc"></i>referências e meta</span>
+        <span><i style="background:#6fcf6f"></i>diário</span>
+      </div>
       <div id="grafo-nota" class="ni" style="display:none;max-height:35%;overflow:auto;border-radius:0;border-left:none;border-right:none"></div>
     </div>
 
