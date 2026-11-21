@@ -236,7 +236,15 @@
     if (nome === 'nota') carregarNotas()
   }
 
-  function carregarTudo() { carregarTarefas(); carregarNotas() }
+  function carregarTudo() { carregarTarefas(); carregarNotas(); carregarHistorico() }
+
+  async function carregarHistorico() {
+    const { data } = await sb.from('hefesto_chat_historico').select('role,content,ts').order('ts', { ascending: false }).limit(60)
+    if (!data || !data.length) return
+    const c = document.getElementById('msgs')
+    c.innerHTML = ''
+    data.reverse().forEach(l => addMsg(l.content, l.role === 'user' ? 'u' : 'ia'))
+  }
 
   async function enviar() {
     const inp = document.getElementById('inp')
