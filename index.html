@@ -171,9 +171,14 @@
   const SUPABASE_URL = 'https://tlhjobskstfcytgulicd.supabase.co'
   const SUPABASE_KEY = 'sb_publishable_8VJnvD-FvATS2YcQ_KCkyw_qxYzs9Et'
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-    db: { schema: 'hefesto' },
     auth: { persistSession: true, autoRefreshToken: true }
   })
+  const T = {
+    tarefas: 'hefesto_tarefas',
+    notas: 'hefesto_notas',
+    mensagens: 'hefesto_mensagens_pendentes',
+    vault: 'hefesto_vault_notas'
+  }
 
   let OWNER = null
   let pollingMsg = null
@@ -230,7 +235,7 @@
     if (!txt) return
     inp.value = ''
     addMsg(txt, 'u')
-    const { data, error } = await sb.from('mensagens_pendentes').insert({ texto: txt, owner: OWNER }).select().single()
+    const { data, error } = await sb.from(T.mensagens).insert({ texto: txt, owner: OWNER }).select().single()
     if (error) { addMsg('❌ Erro ao enviar: ' + error.message, 'ia'); return }
     const esperaEl = document.createElement('div')
     esperaEl.className = 'espera'
@@ -244,7 +249,7 @@
     let tentativas = 0
     const intervalo = setInterval(async () => {
       tentativas++
-      const { data } = await sb.from('mensagens_pendentes').select('respondida,resposta').eq('id', id).single()
+      const { data } = await sb.from(T.mensagens).select('respondida,resposta').eq('id', id).single()
       if (data && data.respondida) {
         clearInterval(intervalo)
         esperaEl.remove()
@@ -270,7 +275,7 @@
 
   // ── TAREFAS ──
   async function carregarTarefas() {
-    const { data } = await sb.from('tarefas').select('*').order('criada', { ascending: false })
+    const { data } = await sb.from(T.tarefas).select('*').order('criada', { ascending: false })
     const lst = document.getElementById('lst-tar')
     if (!data || !data.length) { lst.innerHTML = '<div class="vz">✅ Nenhuma tarefa ainda!</div>'; return }
     lst.innerHTML = ''
@@ -279,7 +284,7 @@
       div.className = `ti${t.concluida ? ' done' : ''}`
       div.innerHTML = `<div class="ck">${t.concluida ? '✓' : ''}</div><div class="tt">${t.texto}</div>`
       if (!t.concluida) div.onclick = async () => {
-        await sb.from('tarefas').update({ concluida: true, concluida_em: new Date().toISOString() }).eq('id', t.id)
+        await sb.from(T.tarefas).update({ concluida: true, concluida_em: new Date().toISOString() }).eq('id', t.id)
         carregarTarefas()
       }
       lst.appendChild(div)
@@ -289,14 +294,14 @@
   async function addTar() {
     const inp = document.getElementById('ni-tar')
     const txt = inp.value.trim(); if (!txt) return
-    await sb.from('tarefas').insert({ texto: txt, owner: OWNER })
+    await sb.from(T.tarefas).insert({ texto: txt, owner: OWNER })
     inp.value = ''; carregarTarefas()
   }
   document.getElementById('ni-tar').addEventListener('keydown', e => { if (e.key === 'Enter') addTar() })
 
   // ── NOTAS ──
   async function carregarNotas() {
-    const { data } = await sb.from('notas').select('*').order('criada', { ascending: false }).limit(30)
+    const { data } = await sb.from(T.notas).select('*').order('criada', { ascending: false }).limit(30)
     const lst = document.getElementById('lst-nota')
     if (!data || !data.length) { lst.innerHTML = '<div class="vz">📝 Nenhuma nota ainda.</div>'; return }
     lst.innerHTML = ''
@@ -310,7 +315,7 @@
   async function addNota() {
     const inp = document.getElementById('ni-nota')
     const txt = inp.value.trim(); if (!txt) return
-    await sb.from('notas').insert({ texto: txt, owner: OWNER })
+    await sb.from(T.notas).insert({ texto: txt, owner: OWNER })
     inp.value = ''; carregarNotas()
   }
   document.getElementById('ni-nota').addEventListener('keydown', e => { if (e.key === 'Enter') addNota() })
@@ -320,10 +325,10 @@
     const q = document.getElementById('q-busca').value.trim(); if (!q) return
     const res = document.getElementById('busca-res')
     res.innerHTML = '<div class="vz">🔍 Buscando...</div>'
-    const { data, error } = await sb.from('vault_notas').select('caminho,titulo,conteudo').textSearch('conteudo', q.split(' ').join(' & '), { config: 'portuguese' }).limit(10)
+    const { data, error } = await sb.from(T.vault).select('caminho,titulo,conteudo').textSearch('conteudo', q.split(' ').join(' & '), { config: 'portuguese' }).limit(10)
     if (error || !data || !data.length) {
       // fallback: busca simples por ilike
-      const { data: data2 } = await sb.from('vault_notas').select('caminho,titulo,conteudo').ilike('conteudo', `%${q}%`).limit(10)
+      const { data: data2 } = await sb.from(T.vault).select('caminho,titulo,conteudo').ilike('conteudo', `%${q}%`).limit(10)
       renderBusca(data2, q)
       return
     }
