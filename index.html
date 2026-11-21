@@ -426,7 +426,7 @@
     if (!data || !data.length) { lst.innerHTML = '<div class="vz" style="padding:10px">Nenhuma rotina ainda</div>'; return }
     lst.innerHTML = ''
     data.forEach(r => {
-      const info = r.tipo === 'diaria' ? 'Todo dia' : r.tipo === 'semanal' ? (r.dias || []).map(i => DIAS_NOME[i]).join(', ') : `Férias: ${r.inicio} a ${r.fim}`
+      const info = r.tipo === 'diaria' ? 'Todo dia' : r.tipo === 'semanal' ? (r.dias || []).map(i => DIAS_NOME[i]).join(', ') : (r.inicio && r.fim ? `Férias: ${r.inicio} a ${r.fim}` : 'Férias (15/11 a 01/02)')
       const div = document.createElement('div'); div.className = 'ti'
       div.innerHTML = `<div style="flex:1;min-width:0"><div class="tt">${esc(r.nome)} · ${esc(r.hora)}</div><div class="td">${info}</div></div><button class="ic-btn">×</button>`
       div.querySelector('button').onclick = async () => { await sb.from(T.rotinas).delete().eq('id', r.id); carregarRotinas() }
@@ -496,9 +496,19 @@
     const agora = new Date()
     const hhmm = String(agora.getHours()).padStart(2,'0') + ':' + String(agora.getMinutes()).padStart(2,'0')
     const hoje = agora.toLocaleDateString('sv-SE')
+    const mmdd = String(agora.getMonth() + 1).padStart(2, '0') + '-' + String(agora.getDate()).padStart(2, '0')
+    const emFerias = (mmdd >= '11-15' || mmdd <= '02-01')
+
     const { data: rotinas } = await sb.from(T.rotinas).select('*').eq('hora', hhmm)
     for (const r of rotinas || []) {
-      const vale = r.tipo === 'diaria' || (r.tipo === 'semanal' && (r.dias || []).includes(agora.getDay())) || (r.tipo === 'ferias' && hoje >= r.inicio && hoje <= r.fim)
+      let vale = false
+      if (r.tipo === 'ferias') {
+        vale = emFerias
+      } else if (r.tipo === 'diaria') {
+        vale = true
+      } else if (r.tipo === 'semanal') {
+        vale = !emFerias && (r.dias || []).includes(agora.getDay())
+      }
       const chave = r.id + hoje
       if (vale && !rotinasAvisadas.has(chave)) { rotinasAvisadas.add(chave); avisar('Hefesto · ' + r.nome, r.nome) }
     }
