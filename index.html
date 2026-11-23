@@ -120,6 +120,17 @@
   .br-item { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07); border-radius: 10px; padding: 12px 14px; margin: 0 14px 8px; }
   .br-titulo { color: var(--vc); font-weight: 600; font-size: 14px; }
   .br-trecho { color: var(--cz); font-size: 12px; margin-top: 4px; }
+
+  /* ===== HOJE / FILTROS / AVISO RÁPIDO ===== */
+  .vz-mini { font-size: 12px; color: var(--cz); padding: 2px 4px 6px; }
+  .filtro { display: flex; gap: 8px; align-items: center; padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,.05); font-size: 12px; color: var(--cz); }
+  .filtro .ai { padding: 8px 12px; font-size: 13px; }
+  .sec-clicavel { cursor: pointer; }
+  #toast { position: fixed; left: 12px; right: 12px; bottom: calc(14px + env(safe-area-inset-bottom)); background: #15070a;
+    border: 1px solid rgba(200,30,44,.4); border-radius: 10px; padding: 10px 14px; font-size: 13px; display: none;
+    align-items: center; justify-content: space-between; gap: 10px; z-index: 12; }
+  #toast.on { display: flex; }
+  .expandido { font-size: 12px; color: var(--czc); white-space: pre-wrap; margin: 0 14px 8px; padding: 10px 12px; background: rgba(0,0,0,.35); border-radius: 8px; }
 </style>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0a0a0c">
@@ -155,15 +166,24 @@
     </div>
 
     <div id="tabs">
-      <div class="tab on" onclick="tab('chat',this)" title="Chat"><svg class="ic" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
-      <div class="tab" onclick="tab('tar',this)" title="Tarefas"><svg class="ic" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div>
-      <div class="tab" onclick="tab('nota',this)" title="Notas"><svg class="ic" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg></div>
-      <div class="tab" onclick="tab('grafo',this)" title="Grafo do vault"><svg class="ic" viewBox="0 0 24 24"><circle cx="5" cy="6" r="2.5"/><circle cx="19" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M7.2 7l3.5 9M16.8 7l-3.5 9M7.5 6h9"/></svg></div>
-      <div class="tab" onclick="tab('busca',this)" title="Buscar"><svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></div>
+      <div class="tab on" data-k="hoje" onclick="tab('hoje')" title="Hoje"><svg class="ic" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg></div>
+      <div class="tab" data-k="chat" onclick="tab('chat')" title="Chat"><svg class="ic" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
+      <div class="tab" data-k="tar" onclick="tab('tar')" title="Tarefas"><svg class="ic" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div>
+      <div class="tab" data-k="nota" onclick="tab('nota')" title="Notas"><svg class="ic" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg></div>
+      <div class="tab" data-k="grafo" onclick="tab('grafo')" title="Grafo"><svg class="ic" viewBox="0 0 24 24"><circle cx="5" cy="6" r="2.5"/><circle cx="19" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M7.2 7l3.5 9M16.8 7l-3.5 9M7.5 6h9"/></svg></div>
+      <div class="tab" data-k="busca" onclick="tab('busca')" title="Buscar"><svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></div>
+    </div>
+
+    <!-- HOJE -->
+    <div class="pnl on" id="tab-hoje">
+      <div class="ar" style="border-top:none; border-bottom:1px solid rgba(255,255,255,.05)">
+        <input class="ai" id="captura" placeholder="Nota · !t tarefa · !e evento">
+      </div>
+      <div class="lst" id="lst-hoje"></div>
     </div>
 
     <!-- CHAT -->
-    <div class="pnl on" id="tab-chat">
+    <div class="pnl" id="tab-chat">
       <div id="msgs">
         <div class="m ia"><div class="av"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div><div class="mb">Olá. Sou o <strong>Hefesto</strong>. Suas mensagens são respondidas pelo seu PC (precisa estar ligado com o Hefesto aberto).<br><br>Use o microfone para falar, o alto-falante para ouvir as respostas, e a aba Grafo para ver o seu vault. Toque em <strong>Avisos</strong> no topo para receber alertas de tarefas e rotinas.</div></div>
       </div>
@@ -177,6 +197,10 @@
 
     <!-- TAREFAS -->
     <div class="pnl" id="tab-tar">
+      <div class="filtro">
+        <input class="ai" id="filtro-tar" placeholder="Filtrar tarefas...">
+        <label style="display:flex; align-items:center; gap:4px; white-space:nowrap; cursor:pointer"><input type="checkbox" id="so-prazo"> Só com prazo</label>
+      </div>
       <div class="lst" id="lst-tar"></div>
       <div class="ar" style="flex-wrap:wrap">
         <input class="ai" id="ni-tar" placeholder="Nova tarefa..." style="flex:1 1 140px">
@@ -229,13 +253,15 @@
     <!-- BUSCA -->
     <div class="pnl" id="tab-busca">
       <div class="ar" style="border-top:none; border-bottom:1px solid rgba(255,255,255,.05)">
-        <input class="ai" id="q-busca" placeholder="Pesquisar no vault...">
+        <input class="ai" id="q-busca" placeholder="Buscar em tarefas, notas e vault...">
         <button class="ab" onclick="buscar()">Buscar</button>
       </div>
-      <div class="lst" id="busca-res"><div class="vz">Digite algo para buscar no vault</div></div>
+      <div class="lst" id="busca-res"></div>
     </div>
   </div>
 </div>
+
+<div id="toast"></div>
 
 <script>
   const SUPABASE_URL = 'https://tlhjobskstfcytgulicd.supabase.co'
@@ -285,17 +311,51 @@
   }
   tentarRestaurarSessao()
 
-  function tab(nome, el) {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'))
-    el.classList.add('on')
+  // Rotas por hash (#/hoje, #/tarefas...): o botão voltar do celular troca de aba em vez de sair do app
+  const ROTAS = { hoje: 'hoje', chat: 'chat', tar: 'tarefas', nota: 'notas', grafo: 'grafo', busca: 'buscar' }
+  const ROTA_DE = Object.fromEntries(Object.entries(ROTAS).map(([k, v]) => [v, k]))
+
+  function mostrarPainel(nome) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.k === nome))
     document.querySelectorAll('.pnl').forEach(p => p.classList.remove('on'))
     document.getElementById('tab-' + nome).classList.add('on')
+    if (nome === 'hoje') carregarHoje()
     if (nome === 'tar') carregarTarefas()
     if (nome === 'nota') carregarNotas()
+    if (nome === 'busca') carregarBuscaRecente()
     if (nome === 'grafo') carregarGrafo()
   }
 
-  function carregarTudo() { carregarTarefas(); carregarNotas(); carregarHistorico() }
+  function tab(nome) {
+    mostrarPainel(nome)
+    const h = '#/' + ROTAS[nome]
+    if (location.hash !== h) history.pushState(null, '', h)
+  }
+  window.addEventListener('popstate', () => {
+    const nome = ROTA_DE[location.hash.replace('#/', '')]
+    if (nome) mostrarPainel(nome)
+  })
+
+  function carregarTudo() {
+    carregarNotas(); carregarHistorico()
+    const nome = ROTA_DE[location.hash.replace('#/', '')] || 'hoje'
+    history.replaceState(null, '', '#/' + ROTAS[nome])
+    mostrarPainel(nome)
+  }
+
+  function avisoRapido(msg, acao) {
+    const t = document.getElementById('toast')
+    t.innerHTML = ''
+    const span = document.createElement('span'); span.textContent = msg; t.appendChild(span)
+    if (acao) {
+      const b = document.createElement('button'); b.className = 'ab mini'; b.textContent = acao.rotulo
+      b.onclick = () => { acao.fn(); t.classList.remove('on') }
+      t.appendChild(b)
+    }
+    t.classList.add('on')
+    clearTimeout(avisoRapido.timer)
+    avisoRapido.timer = setTimeout(() => t.classList.remove('on'), acao ? 5000 : 2500)
+  }
 
   async function carregarHistorico() {
     const { data, error } = await sb.from('hefesto_chat_historico').select('role,content,ts').order('ts', { ascending: false }).limit(60)
@@ -363,45 +423,183 @@
   const DIAS_NOME = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb']
   let tarEdit = null
 
+  const mesmoDia = (a, b) => a.toDateString() === b.toDateString()
+  const hora = iso => iso ? new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : ''
+
+  function rotinaHoje(r, agora) {
+    if (r.tipo === 'diaria') return true
+    if (r.tipo === 'semanal') return (r.dias || []).includes(agora.getDay())
+    if (r.tipo === 'ferias' && r.inicio && r.fim) {
+      const hoje = agora.toLocaleDateString('sv-SE')
+      return hoje >= r.inicio && hoje <= r.fim
+    }
+    return false
+  }
+
+  function itemSimples(titulo, sub, onclick) {
+    const div = document.createElement('div'); div.className = 'ti'
+    div.innerHTML = `<div style="flex:1;min-width:0"><div class="tt">${esc(titulo)}</div>${sub ? `<div class="td">${esc(sub)}</div>` : ''}</div>`
+    if (onclick) div.onclick = onclick
+    return div
+  }
+
+  function cabecalho(texto, n) {
+    const h = document.createElement('div'); h.className = 'sec'
+    h.textContent = n == null ? texto : `${texto} · ${n}`
+    return h
+  }
+
+  async function carregarHoje() {
+    const agora = new Date()
+    const div = document.getElementById('lst-hoje')
+    const [tarRes, rotRes] = await Promise.all([
+      sb.from(T.tarefas).select('*').eq('concluida', false).order('quando', { ascending: true, nullsFirst: false }),
+      sb.from(T.rotinas).select('*')
+    ])
+    const tarefas = (tarRes.data || []).filter(t => !pendentes.has(t.id))
+    const rotinas = (rotRes.data || []).filter(r => rotinaHoje(r, agora))
+    div.innerHTML = ''
+
+    div.appendChild(cabecalho('Agenda'))
+    div.insertAdjacentHTML('beforeend', '<div class="vz-mini">Eventos do Google aparecem aqui quando a agenda estiver conectada no PC.</div>')
+
+    div.appendChild(cabecalho('Próximas tarefas'))
+    if (tarefas.length) {
+      tarefas.slice(0, 3).forEach(t => div.appendChild(itemSimples(t.texto, t.quando ? fmtQ(t.quando) : 'sem data', () => tab('tar'))))
+      if (tarefas.length > 3) {
+        const ver = document.createElement('button'); ver.className = 'ab mini'; ver.style.alignSelf = 'flex-start'
+        ver.textContent = `Ver todas (${tarefas.length})`; ver.onclick = () => tab('tar'); div.appendChild(ver)
+      }
+    } else div.insertAdjacentHTML('beforeend', '<div class="vz-mini">Nenhuma tarefa aberta</div>')
+
+    if (rotinas.length) {
+      div.appendChild(cabecalho('Rotinas de hoje'))
+      rotinas.forEach(r => div.appendChild(itemSimples(r.nome, r.hora, () => tab('tar'))))
+    }
+
+    if (!tarefas.length && !rotinas.length) {
+      div.insertAdjacentHTML('beforeend', `<div class="vz-mini" style="padding-top:10px">Nada para hoje. Sugestões:</div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; padding:0 4px">
+          <button class="ab mini" id="sug-tar">Criar tarefa</button>
+          <button class="ab mini" id="sug-nota">Ver notas</button>
+          <button class="ab mini" id="sug-busca">Buscar no vault</button>
+        </div>`)
+      document.getElementById('sug-tar').onclick = () => { tab('tar'); document.getElementById('ni-tar').focus() }
+      document.getElementById('sug-nota').onclick = () => tab('nota')
+      document.getElementById('sug-busca').onclick = () => tab('busca')
+    }
+  }
+
+  async function capturar() {
+    const inp = document.getElementById('captura')
+    const txt = inp.value.trim(); if (!txt) return
+    inp.value = ''
+    if (txt.startsWith('!t ') || txt.startsWith('!e ')) {
+      await sb.from(T.tarefas).insert({ texto: txt.slice(3).trim(), origem: 'web', owner: OWNER })
+      avisoRapido(txt.startsWith('!e ') ? 'Evento salvo como tarefa: Google Agenda ainda não conectado' : 'Tarefa criada')
+    } else {
+      await sb.from(T.notas).insert({ texto: txt, owner: OWNER })
+      avisoRapido('Nota salva')
+    }
+    carregarHoje()
+  }
+  document.getElementById('captura').addEventListener('keydown', e => { if (e.key === 'Enter') capturar() })
+
+  // Tarefas: agrupadas por prazo; concluir espera 5 s e pode ser desfeito
+  const pendentes = new Map()
+  let feitasAbertas = false
+
+  function grupoDeTarefa(t, agora) {
+    if (!t.quando) return 'Sem data'
+    const q = new Date(t.quando)
+    if (q < agora) return 'Atrasadas'
+    if (mesmoDia(q, agora)) return 'Hoje'
+    if (q - agora < 7 * 864e5) return 'Esta semana'
+    return 'Mais adiante'
+  }
+
+  function concluirComDesfazer(t) {
+    if (pendentes.has(t.id)) return
+    const timer = setTimeout(async () => {
+      pendentes.delete(t.id)
+      await sb.from(T.tarefas).update({ concluida: true, concluida_em: new Date().toISOString() }).eq('id', t.id)
+      carregarTarefas()
+    }, 5000)
+    pendentes.set(t.id, timer)
+    carregarTarefas()
+    avisoRapido(`Concluída: ${t.texto}`, { rotulo: 'Desfazer', fn: () => {
+      clearTimeout(timer); pendentes.delete(t.id); carregarTarefas()
+    } })
+  }
+
+  function itemTarefa(t) {
+    const feita = t.concluida || pendentes.has(t.id)
+    const div = document.createElement('div')
+    div.className = `ti${feita ? ' done' : ''}`
+    if (tarEdit === t.id) {
+      div.innerHTML = `<div style="flex:1;display:flex;flex-direction:column;gap:6px">
+        <input class="ai" id="ed-txt" value="${esc(t.texto)}">
+        <input class="ai" id="ed-q" type="datetime-local" value="${t.quando ? isoLocal(t.quando) : ''}" style="color-scheme:dark">
+        <div style="display:flex;gap:6px"><button class="ab" id="ed-ok">Salvar</button><button class="ab" id="ed-no">Cancelar</button></div></div>`
+      div.querySelector('#ed-ok').onclick = async () => {
+        const txt = document.getElementById('ed-txt').value.trim()
+        const q = document.getElementById('ed-q').value
+        if (!txt) return
+        await sb.from(T.tarefas).update({ texto: txt, quando: q ? new Date(q).toISOString() : null, notificada: false }).eq('id', t.id)
+        tarEdit = null; carregarTarefas()
+      }
+      div.querySelector('#ed-no').onclick = () => { tarEdit = null; carregarTarefas() }
+      return div
+    }
+    div.innerHTML = `<div class="ck">${feita ? ICONE_CHECK : ''}</div>
+      <div style="flex:1;min-width:0"><div class="tt">${esc(t.texto)}</div><div class="td">${t.quando ? '⏰ ' + fmtQ(t.quando) : ''}</div></div>
+      ${feita ? '' : '<button class="ic-btn" data-a="ed" title="Editar">✎</button>'}
+      <button class="ic-btn" data-a="del" title="Excluir">×</button>`
+    if (!feita) {
+      div.querySelector('.ck').onclick = () => concluirComDesfazer(t)
+      div.querySelector('.tt').onclick = () => concluirComDesfazer(t)
+      div.querySelector('[data-a=ed]').onclick = () => { tarEdit = t.id; carregarTarefas() }
+    }
+    div.querySelector('[data-a=del]').onclick = async () => { await sb.from(T.tarefas).delete().eq('id', t.id); carregarTarefas() }
+    return div
+  }
+
   async function carregarTarefas() {
     const { data } = await sb.from(T.tarefas).select('*').order('criada', { ascending: false })
     const lst = document.getElementById('lst-tar')
-    if (!data || !data.length) { lst.innerHTML = '<div class="vz">Nenhuma tarefa ainda</div>' } else {
-      lst.innerHTML = ''
-      data.forEach(t => {
-        const div = document.createElement('div')
-        div.className = `ti${t.concluida ? ' done' : ''}`
-        if (tarEdit === t.id) {
-          div.innerHTML = `<div style="flex:1;display:flex;flex-direction:column;gap:6px">
-            <input class="ai" id="ed-txt" value="${esc(t.texto)}">
-            <input class="ai" id="ed-q" type="datetime-local" value="${t.quando ? isoLocal(t.quando) : ''}" style="color-scheme:dark">
-            <div style="display:flex;gap:6px"><button class="ab" id="ed-ok">Salvar</button><button class="ab" id="ed-no">Cancelar</button></div></div>`
-          div.querySelector('#ed-ok').onclick = async () => {
-            const txt = document.getElementById('ed-txt').value.trim()
-            const q = document.getElementById('ed-q').value
-            if (!txt) return
-            await sb.from(T.tarefas).update({ texto: txt, quando: q ? new Date(q).toISOString() : null, notificada: false }).eq('id', t.id)
-            tarEdit = null; carregarTarefas()
-          }
-          div.querySelector('#ed-no').onclick = () => { tarEdit = null; carregarTarefas() }
-        } else {
-          div.innerHTML = `<div class="ck">${t.concluida ? ICONE_CHECK : ''}</div>
-            <div style="flex:1;min-width:0"><div class="tt">${esc(t.texto)}</div><div class="td">${t.quando ? '⏰ ' + fmtQ(t.quando) : ''}</div></div>
-            ${t.concluida ? '' : '<button class="ic-btn" data-a="ed" title="Editar">✎</button>'}
-            <button class="ic-btn" data-a="del" title="Excluir">×</button>`
-          if (!t.concluida) div.querySelector('.tt').onclick = async () => {
-            await sb.from(T.tarefas).update({ concluida: true, concluida_em: new Date().toISOString() }).eq('id', t.id)
-            carregarTarefas()
-          }
-          const ed = div.querySelector('[data-a=ed]')
-          if (ed) ed.onclick = () => { tarEdit = t.id; carregarTarefas() }
-          div.querySelector('[data-a=del]').onclick = async () => { await sb.from(T.tarefas).delete().eq('id', t.id); carregarTarefas() }
-        }
-        lst.appendChild(div)
-      })
+    const agora = new Date()
+    const filtro = document.getElementById('filtro-tar').value.trim().toLowerCase()
+    const soPrazo = document.getElementById('so-prazo').checked
+    const todas = data || []
+    const feitaVisual = t => t.concluida || pendentes.has(t.id)
+    const casa = t => !filtro || t.texto.toLowerCase().includes(filtro)
+    const abertas = todas.filter(t => !feitaVisual(t) && casa(t) && (!soPrazo || t.quando))
+    const feitas = todas.filter(t => feitaVisual(t) && casa(t))
+
+    lst.innerHTML = ''
+    if (!todas.length) { lst.innerHTML = '<div class="vz">Nenhuma tarefa ainda</div>'; carregarRotinas(); return }
+
+    const grupos = {}
+    abertas.forEach(t => { const g = grupoDeTarefa(t, agora); (grupos[g] = grupos[g] || []).push(t) })
+    ;['Atrasadas', 'Hoje', 'Esta semana', 'Mais adiante', 'Sem data'].forEach(g => {
+      const itens = grupos[g]; if (!itens) return
+      lst.appendChild(cabecalho(g, itens.length))
+      itens.sort((a, b) => (a.quando || '').localeCompare(b.quando || '')).forEach(t => lst.appendChild(itemTarefa(t)))
+    })
+
+    if (feitas.length) {
+      const h = cabecalho(`${feitasAbertas ? '▾' : '▸'} Feitas`, feitas.length)
+      h.classList.add('sec-clicavel')
+      h.onclick = () => { feitasAbertas = !feitasAbertas; carregarTarefas() }
+      lst.appendChild(h)
+      if (feitasAbertas) feitas.forEach(t => lst.appendChild(itemTarefa(t)))
     }
+    if (!abertas.length && !feitas.length) lst.insertAdjacentHTML('beforeend', '<div class="vz">Nada com esse filtro</div>')
     carregarRotinas()
   }
+
+  document.getElementById('filtro-tar').addEventListener('input', () => carregarTarefas())
+  document.getElementById('so-prazo').addEventListener('change', () => carregarTarefas())
 
   async function addTar() {
     const inp = document.getElementById('ni-tar')
@@ -700,30 +898,57 @@
     box.innerHTML = `<strong style="color:var(--vc)">${esc(n.titulo)}</strong><div style="margin-top:6px;white-space:pre-wrap;font-size:12px;color:var(--czc)">${esc(n.conteudo.slice(0, 2000))}</div>`
   }
 
-  async function buscar() {
-    const q = document.getElementById('q-busca').value.trim(); if (!q) return
-    const res = document.getElementById('busca-res')
-    res.innerHTML = '<div class="vz">Buscando...</div>'
-    const { data, error } = await sb.from(T.vault).select('caminho,titulo,conteudo').textSearch('conteudo', q.split(' ').join(' & '), { config: 'portuguese' }).limit(10)
-    if (error || !data || !data.length) {
-      const { data: data2 } = await sb.from(T.vault).select('caminho,titulo,conteudo').ilike('conteudo', `%${q}%`).limit(10)
-      renderBusca(data2, q)
-      return
-    }
-    renderBusca(data, q)
+  const CHAVE_RECENTES = 'hefesto.buscasRecentes'
+  function buscasRecentes() { try { return JSON.parse(localStorage.getItem(CHAVE_RECENTES) || '[]') } catch { return [] } }
+  function guardarBusca(q) {
+    localStorage.setItem(CHAVE_RECENTES, JSON.stringify([q, ...buscasRecentes().filter(x => x !== q)].slice(0, 5)))
   }
 
-  function renderBusca(data, q) {
+  function carregarBuscaRecente() {
     const res = document.getElementById('busca-res')
-    if (!data || !data.length) { res.innerHTML = `<div class="vz">Nada encontrado sobre "${q}"</div>`; return }
+    const rec = buscasRecentes()
     res.innerHTML = ''
-    data.forEach(r => {
-      const idx = r.conteudo.toLowerCase().indexOf(q.toLowerCase())
-      const trecho = idx >= 0 ? r.conteudo.slice(Math.max(0, idx - 40), idx + 100) : r.conteudo.slice(0, 100)
-      const div = document.createElement('div'); div.className = 'br-item'
-      div.innerHTML = `<div class="br-titulo">${r.titulo || r.caminho}</div><div class="br-trecho">${trecho}...</div>`
-      res.appendChild(div)
+    if (!rec.length) { res.innerHTML = '<div class="vz">Busque em tarefas, notas e no vault</div>'; return }
+    res.appendChild(cabecalho('Buscas recentes'))
+    rec.forEach(q => res.appendChild(itemSimples(q, '', () => { document.getElementById('q-busca').value = q; buscar() })))
+  }
+
+  async function buscarVault(q) {
+    const { data, error } = await sb.from(T.vault).select('caminho,titulo,conteudo').textSearch('conteudo', q.split(' ').join(' & '), { config: 'portuguese' }).limit(10)
+    if (!error && data && data.length) return data
+    const { data: data2 } = await sb.from(T.vault).select('caminho,titulo,conteudo').ilike('conteudo', `%${q}%`).limit(10)
+    return data2 || []
+  }
+
+  async function buscar() {
+    const q = document.getElementById('q-busca').value.trim(); if (!q) return
+    guardarBusca(q)
+    const res = document.getElementById('busca-res')
+    res.innerHTML = '<div class="vz">Buscando...</div>'
+    const seguro = q.replace(/[%,()]/g, ' ')
+    const [tarRes, notaRes, vault] = await Promise.all([
+      sb.from(T.tarefas).select('*').ilike('texto', `%${seguro}%`).limit(20),
+      sb.from(T.notas).select('*').ilike('texto', `%${seguro}%`).limit(20),
+      buscarVault(q)
+    ])
+    res.innerHTML = ''
+    const grupo = (titulo, itens, criar) => {
+      if (!itens.length) return
+      res.appendChild(cabecalho(titulo, itens.length))
+      itens.forEach(i => res.appendChild(criar(i)))
+    }
+    grupo('Tarefas', tarRes.data || [], t => itemSimples(t.texto, t.concluida ? 'concluída' : (t.quando ? fmtQ(t.quando) : 'sem data'), () => tab('tar')))
+    grupo('Notas', notaRes.data || [], n => itemSimples(n.texto.slice(0, 120), new Date(n.criada).toLocaleDateString('pt-BR'), () => tab('nota')))
+    grupo('Vault', vault, r => {
+      const div = itemSimples(r.titulo || r.caminho, (r.conteudo || '').slice(0, 100), () => {
+        const aberto = div.nextElementSibling
+        if (aberto && aberto.classList.contains('expandido')) { aberto.remove(); return }
+        const txt = document.createElement('div'); txt.className = 'expandido'; txt.textContent = (r.conteudo || '').slice(0, 2000)
+        div.after(txt)
+      })
+      return div
     })
+    if (!(tarRes.data || []).length && !(notaRes.data || []).length && !vault.length) res.innerHTML = `<div class="vz">Nada encontrado sobre "${esc(q)}"</div>`
   }
   document.getElementById('q-busca').addEventListener('keydown', e => { if (e.key === 'Enter') buscar() })
 </script>
