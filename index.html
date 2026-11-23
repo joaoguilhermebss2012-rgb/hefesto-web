@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -12,7 +12,7 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { height: 100%; background: #070708; font-family: 'Segoe UI', -apple-system, sans-serif; color: #d8d8dc; overflow: hidden; }
-  #app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+  #app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; padding-top: env(safe-area-inset-top); padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
 
   :root { --v: #c81e2c; --vc: #e8384a; --cz: #8a8a92; --czc: #d8d8dc; }
   svg { display: block; }
@@ -73,7 +73,7 @@
   .mb strong { color: var(--vc); }
   .espera { font-size: 11px; color: var(--cz); font-style: italic; padding: 2px 0; }
 
-  #inp-area { padding: 10px 12px; background: rgba(0,0,0,.3); border-top: 1px solid rgba(255,255,255,.05); display: flex; gap: 8px; flex-shrink: 0; }
+  #inp-area { padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); background: rgba(0,0,0,.3); border-top: 1px solid rgba(255,255,255,.05); display: flex; gap: 8px; flex-shrink: 0; }
   #inp { flex: 1; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1); border-radius: 18px;
     padding: 11px 16px; color: #fff; font-size: 14px; outline: none; }
   #inp:focus { border-color: rgba(200,30,44,.5); }
