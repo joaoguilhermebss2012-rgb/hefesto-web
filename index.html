@@ -132,6 +132,16 @@
   #toast.on { display: flex; }
   .expandido { font-size: 12px; color: var(--czc); white-space: pre-wrap; margin: 0 14px 8px; padding: 10px 12px; background: rgba(0,0,0,.35); border-radius: 8px; }
 
+  /* ===== PALETA DE COMANDOS ===== */
+  #pal { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: none; align-items: flex-start; justify-content: center; padding: calc(60px + env(safe-area-inset-top)) 12px 12px; z-index: 20; }
+  #pal.on { display: flex; }
+  .pal-box { width: 100%; max-width: 420px; background: #0e0a0b; border: 1px solid rgba(200,30,44,.35); border-radius: 12px; overflow: hidden; }
+  #pal-inp { width: 100%; background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,.08); padding: 14px 16px; color: #fff; font-size: 15px; outline: none; }
+  #pal-lst { max-height: 60vh; overflow-y: auto; }
+  .pal-item { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 11px 16px; font-size: 14px; color: var(--czc); cursor: pointer; }
+  .pal-item small { font-size: 11px; color: var(--cz); }
+  .pal-item.sel { background: rgba(200,30,44,.18); color: #fff; }
+
   /* ===== ACESSIBILIDADE ===== */
   :focus-visible { outline: 2px solid var(--vc); outline-offset: 2px; }
   .tab:focus-visible, .ti:focus-visible, .ic-btn:focus-visible { outline-offset: -2px; border-radius: 8px; }
@@ -178,6 +188,7 @@
         <div class="hn">HEFESTO</div>
         <div class="hs" id="hs">conectando...</div>
       </div>
+      <button id="sair" onclick="abrirPaleta()" title="Comandos (Ctrl+K)" aria-label="Comandos" style="margin-right:6px"><svg class="ic" viewBox="0 0 24 24" style="width:14px;height:14px"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg></button>
       <button id="sair" onclick="pedirAvisos()" title="Ativar avisos" style="margin-right:6px">Avisos</button>
       <button id="sair" onclick="sair()">Sair</button>
     </div>
@@ -279,6 +290,12 @@
 </div>
 
 <div id="toast"></div>
+<div id="pal" role="dialog" aria-label="Comandos">
+  <div class="pal-box">
+    <input id="pal-inp" placeholder="Ir para, criar ou buscar..." autocomplete="off">
+    <div id="pal-lst"></div>
+  </div>
+</div>
 
 <script>
   const SUPABASE_URL = 'https://tlhjobskstfcytgulicd.supabase.co'
@@ -351,6 +368,71 @@
   window.addEventListener('popstate', () => {
     const nome = ROTA_DE[location.hash.replace('#/', '')]
     if (nome) mostrarPainel(nome)
+  })
+
+  // ===== PALETA DE COMANDOS (Ctrl+K no PC, botão Comandos no celular) =====
+  function comandosBase() {
+    return [
+      { rotulo: 'Ir para Hoje', grupo: 'Ir para', fn: () => tab('hoje') },
+      { rotulo: 'Ir para Chat', grupo: 'Ir para', fn: () => tab('chat') },
+      { rotulo: 'Ir para Tarefas', grupo: 'Ir para', fn: () => tab('tar') },
+      { rotulo: 'Ir para Notas', grupo: 'Ir para', fn: () => tab('nota') },
+      { rotulo: 'Ir para Buscar', grupo: 'Ir para', fn: () => tab('busca') },
+      { rotulo: 'Ir para Grafo', grupo: 'Ir para', fn: () => tab('grafo') },
+      { rotulo: 'Nova tarefa', grupo: 'Ação', fn: () => { tab('tar'); document.getElementById('ni-tar').focus() } },
+      { rotulo: 'Nova nota', grupo: 'Ação', fn: () => { tab('nota'); document.getElementById('ni-nota').focus() } },
+      { rotulo: 'Ativar avisos', grupo: 'Ação', fn: () => pedirAvisos() }
+    ]
+  }
+  let palItens = [], palSel = 0
+  function renderPaleta() {
+    const q = document.getElementById('pal-inp').value.trim()
+    const ql = q.toLowerCase()
+    const base = comandosBase().filter(c => !ql || c.rotulo.toLowerCase().includes(ql))
+    base.sort((a, b) => (b.rotulo.toLowerCase().startsWith(ql) ? 1 : 0) - (a.rotulo.toLowerCase().startsWith(ql) ? 1 : 0))
+    if (q) {
+      base.unshift(
+        { rotulo: `Nova tarefa: "${q}"`, grupo: 'Criar', fn: () => { document.getElementById('ni-tar').value = q; addTar(); tab('tar') } },
+        { rotulo: `Nova nota: "${q}"`, grupo: 'Criar', fn: () => { document.getElementById('ni-nota').value = q; addNota(); tab('nota') } },
+        { rotulo: `Buscar "${q}"`, grupo: 'Buscar', fn: () => { tab('busca'); document.getElementById('q-busca').value = q; buscar() } }
+      )
+    }
+    palItens = base; palSel = 0
+    const lst = document.getElementById('pal-lst'); lst.innerHTML = ''
+    palItens.forEach((c, i) => {
+      const div = document.createElement('div')
+      div.className = 'pal-item' + (i === palSel ? ' sel' : '')
+      const s = document.createElement('span'); s.textContent = c.rotulo
+      const g = document.createElement('small'); g.textContent = c.grupo
+      div.append(s, g)
+      div.onclick = () => executarPal(i)
+      lst.appendChild(div)
+    })
+  }
+  function moverPal(d) {
+    if (!palItens.length) return
+    palSel = (palSel + d + palItens.length) % palItens.length
+    document.querySelectorAll('#pal-lst .pal-item').forEach((el, i) => el.classList.toggle('sel', i === palSel))
+  }
+  function executarPal(i) {
+    const c = palItens[i]; if (!c) return
+    fecharPaleta(); c.fn()
+  }
+  function abrirPaleta() {
+    document.getElementById('pal').classList.add('on')
+    const inp = document.getElementById('pal-inp'); inp.value = ''; inp.focus(); renderPaleta()
+  }
+  function fecharPaleta() { document.getElementById('pal').classList.remove('on') }
+  document.getElementById('pal-inp').addEventListener('input', renderPaleta)
+  document.getElementById('pal-inp').addEventListener('keydown', e => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); moverPal(1) }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); moverPal(-1) }
+    else if (e.key === 'Enter') { e.preventDefault(); executarPal(palSel) }
+    else if (e.key === 'Escape') { e.preventDefault(); fecharPaleta() }
+  })
+  document.getElementById('pal').addEventListener('mousedown', e => { if (e.target.id === 'pal') fecharPaleta() })
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey && e.key.toLowerCase() === 'k') { e.preventDefault(); abrirPaleta() }
   })
 
   function carregarTudo() {
